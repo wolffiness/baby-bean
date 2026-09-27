@@ -6,9 +6,9 @@ const sheetNames = {
 	logs: "Logs",
 	devLogs: "Dev Logs",
 	template: "Template",
-	wordTemplate: "Word Count Template",
-	taskTemplate: "Task Template",
 }
+
+const goalTypes = ["Words", "Scenes", "Chapters", "Pages", "Lines"]
 
 const statCalculations = {
 	participants: {
@@ -25,6 +25,13 @@ const statCalculations = {
 
 const templateRanges = {
 	name: "C3",
+	metric: "E3",
+	sessions: "D12",
+	written: "D13",
+	avgWritten: "D14",
+	mostWritten: "D15",
+	avgRate: "D16",
+	highestRate: "D17",
 	goal: "D20",
 	completion: "D21",
 	daily: "D22",
@@ -32,14 +39,25 @@ const templateRanges = {
 }
 
 const templateFormulas = {
+	sessions: (ranges) =>
+		`=COUNTIFS(Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
+	written: (ranges) =>
+		`=SUMIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
+	avgWritten: (ranges) => `=ROUND(${ranges.written}/${ranges.sessions}, 0)`,
+	mostWritten: (ranges) =>
+		`=MAXIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
+	avgRate: (ranges) =>
+		`=ROUND(AVERAGEIFS(Logs!J:J, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric}), 0)`,
+	highestRate: (ranges) =>
+		`=MAXIFS(Logs!J:J, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
 	goal: (ranges, goalAmount) =>
-		`=CONCAT(TEXT(SUMIFS(Logs!G:G, Logs!A:A, ${ranges.name}), "#,##0"), " / " & TEXT(${goalAmount}, "#,##0"))`,
-	completion: (goalAmount) =>
-		`=CONCAT(ROUND(((SUBSTITUTE(D19, " / " & TEXT(${goalAmount}, "#,##0"), "")) / ${goalAmount}) * 100, 0), "%")`,
-	daily: (goalAmount) =>
-		`=TEXT(MAX(0, ROUND((${goalAmount} - SUBSTITUTE(D19, " / " & TEXT(${goalAmount}, "#,##0"), "")) / (EOMONTH(TODAY(),0) - TODAY() + 1), 0)), "#,##0")`,
-	weekly: (goalAmount) =>
-		`=TEXT(MAX(0, ROUND((${goalAmount} - SUBSTITUTE(D19, " / " & TEXT(${goalAmount}, "#,##0"), "")) / MAX(1, ROUNDUP(((EOMONTH(TODAY(),0) - TODAY() + 1) / 7), 0)), 0)), "#,##0")`,
+		`=CONCAT(TEXT(SUMIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric}), "#,##0"), " / " & TEXT(${goalAmount}, "#,##0"))`,
+	completion: (ranges, goalAmount) =>
+		`=CONCAT(ROUND(((SUBSTITUTE(${ranges.goal}, " / " & TEXT(${goalAmount}, "#,##0"), "")) / ${goalAmount}) * 100, 0), "%")`,
+	daily: (ranges, goalAmount) =>
+		`=TEXT(MAX(0, ROUND((${goalAmount} - SUBSTITUTE(${ranges.goal}, " / " & TEXT(${goalAmount}, "#,##0"), "")) / (EOMONTH(TODAY(),0) - TODAY() + 1), 0)), "#,##0")`,
+	weekly: (ranges, goalAmount) =>
+		`=TEXT(MAX(0, ROUND((${goalAmount} - SUBSTITUTE(${ranges.goal}, " / " & TEXT(${goalAmount}, "#,##0"), "")) / MAX(1, ROUNDUP(((EOMONTH(TODAY(),0) - TODAY() + 1) / 7), 0)), 0)), "#,##0")`,
 }
 
 const applicationRange = {
@@ -51,11 +69,12 @@ const applicationRange = {
 
 const logSessionRange = {
 	name: "C3",
-	date: "E3",
-	timeStart: "C4",
-	timeEnd: "E4",
-	countStart: "C5",
-	countEnd: "E5",
+	metric: "E3",
+	date: "C4",
+	timeStart: "C5",
+	timeEnd: "E5",
+	countStart: "C6",
+	countEnd: "E6",
 }
 
 const logTypes = {
@@ -79,7 +98,6 @@ function onOpen() {
 	ui
 		.createMenu("Dev tools")
 		.addItem("Clear logs", "initCleanLogs")
-		// .addItem('Update stats', 'initUpdateStats')
 		.addItem("Update stats", "updateAllStats")
 		.addToUi()
 }
@@ -140,11 +158,6 @@ function participantsUpdateStat() {
 function completionUpdateStat() {
 	deleteExistingTriggers(statCalculations.completion.trigger_function)
 	updateStat("completion")
-}
-
-function tasksCompletedUpdateStat() {
-	deleteExistingTriggers(statCalculations.tasks_completed.trigger_function)
-	updateStat("tasks_completed")
 }
 
 function createTrigger(name, duration) {

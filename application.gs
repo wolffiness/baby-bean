@@ -23,48 +23,57 @@ function submitApplication() {
 			return
 		}
 
-		// Determine sheet settings according to goaltype
-		let userSheetTemplate
-		let ranges
-		let formulas
-
-		if (goalType == "Word count") {
-			userSheetTemplate = getSheet(sheetNames.wordTemplate)
-			ranges = templateRanges.word
-			formulas = templateFormulas.word
-		}
-
-		if (goalType == "Task") {
-			userSheetTemplate = getSheet(sheetNames.taskTemplate)
-			ranges = templateRanges.task
-			formulas = templateFormulas.task
-		}
-
-		// Create new sheet
+		// Create a new sheet from the single generic template
 		if (response !== "edit") {
 			const totalSheets = spreadsheet.getNumSheets()
 			spreadsheet.insertSheet(userSheetName, totalSheets, {
-				template: userSheetTemplate,
+				template: getSheet(sheetNames.template),
 			})
 		}
 
-		// customise sheet according to application
 		const userSheet = getSheet(userSheetName)
-		const nameRange = userSheet.getRange(ranges.name)
+
+		// Swap the [[METRIC]] placeholder for the goal type they picked
+		userSheet
+			.createTextFinder("[[METRIC]]")
+			.matchEntireCell(false)
+			.replaceAllWith(goalType)
+
+		const nameRange = userSheet.getRange(templateRanges.name)
 		nameRange.setValue(name)
 		nameRange.protect().setWarningOnly(true)
 
-		if (goalType == "Task")
-			userSheet
-				.getRange(ranges.todo)
-				.setFormula(formulas.progress(ranges, goalAmount))
-
-		userSheet.getRange(ranges.goal).setFormula(formulas.goal(ranges, goalAmount))
 		userSheet
-			.getRange(ranges.completion)
-			.setFormula(formulas.completion(goalAmount))
-		userSheet.getRange(ranges.daily).setFormula(formulas.daily(goalAmount))
-		userSheet.getRange(ranges.weekly).setFormula(formulas.weekly(goalAmount))
+			.getRange(templateRanges.sessions)
+			.setFormula(templateFormulas.sessions(templateRanges))
+		userSheet
+			.getRange(templateRanges.written)
+			.setFormula(templateFormulas.written(templateRanges))
+		userSheet
+			.getRange(templateRanges.avgWritten)
+			.setFormula(templateFormulas.avgWritten(templateRanges))
+		userSheet
+			.getRange(templateRanges.mostWritten)
+			.setFormula(templateFormulas.mostWritten(templateRanges))
+		userSheet
+			.getRange(templateRanges.avgRate)
+			.setFormula(templateFormulas.avgRate(templateRanges))
+		userSheet
+			.getRange(templateRanges.highestRate)
+			.setFormula(templateFormulas.highestRate(templateRanges))
+
+		userSheet
+			.getRange(templateRanges.goal)
+			.setFormula(templateFormulas.goal(templateRanges, goalAmount))
+		userSheet
+			.getRange(templateRanges.completion)
+			.setFormula(templateFormulas.completion(templateRanges, goalAmount))
+		userSheet
+			.getRange(templateRanges.daily)
+			.setFormula(templateFormulas.daily(templateRanges, goalAmount))
+		userSheet
+			.getRange(templateRanges.weekly)
+			.setFormula(templateFormulas.weekly(templateRanges, goalAmount))
 
 		// remove application data
 		applicationSheet.getRange(applicationRange.full).clearContent()
@@ -80,7 +89,7 @@ function submitApplication() {
 			`Finished ${response == "edit" ? "editing" : "creating"} sheet according to the application.`,
 		)
 	} catch (err) {
-		logMessage(logTypes.err, `An error has occured: ${err.stack}`, source)
+		logMessage(logTypes.error, `An error has occured: ${err.stack}`, source)
 		SpreadsheetApp.getUi().alert(
 			`An error has occured, please contact the script creator for help: ${err.stack}`,
 		)
@@ -101,10 +110,7 @@ function validateForm(name, goalType, goalAmount) {
 		return false
 	}
 
-	if (
-		(goalType !== "Word count" && goalType !== "Task") ||
-		typeof goalAmount !== "number"
-	) {
+	if (!goalTypes.includes(goalType) || typeof goalAmount !== "number") {
 		logMessage(
 			logTypes.warning,
 			`Please make sure the goal amount is a number and the goal type is according to the dropdown.`,
@@ -149,15 +155,10 @@ function checkExistingApplication(userSheetName, goalType) {
 			source,
 		)
 
-		// check goalType
-		const sheetTitle = getSheet(userSheetName).getRange("B2").getValue()
-		const oldGoalType =
-			sheetTitle == "Your accomplishments" ? "Task" : "Word count"
-		logMessage(
-			logTypes.debug,
-			`sheetTitle: ${sheetTitle}. oldGoalType: ${oldGoalType}`,
-			source,
-		)
+		const oldGoalType = getSheet(userSheetName)
+			.getRange(templateRanges.metric)
+			.getValue()
+		logMessage(logTypes.debug, `oldGoalType: ${oldGoalType}`, source)
 
 		if (oldGoalType !== goalType) {
 			logMessage(
