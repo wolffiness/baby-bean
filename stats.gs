@@ -14,15 +14,6 @@ function countStat(stat = "sheet") {
 			return
 
 		if (stat == "sheet") count++
-
-		if (stat == "task") {
-			const headerValue = sheet.getRange("B2").getValue()
-
-			if (headerValue === "Your accomplishments") {
-				// Task goal sheet
-				if (stat == "task") count += Number(sheet.getRange("D6").getValue()) || 0
-			}
-		}
 	})
 
 	return count
@@ -42,15 +33,13 @@ function averageStat(stat = "completion") {
 		)
 			return
 
-		const headerValue = sheet.getRange("B2").getValue()
-
 		if (stat == "completion") {
-			const completionRange =
-				headerValue === "Your accomplishments" ? "D10" : "D20"
 			count++
 			sum +=
 				parseFloat(
-					String(sheet.getRange(completionRange).getValue()).replace("%", ""),
+					String(
+						sheet.getRange(templateRanges.completion).getValue(),
+					).replace("%", ""),
 				) || 0
 		}
 	})
