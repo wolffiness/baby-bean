@@ -4,8 +4,8 @@ const sheetNames = {
 	application: "Apply for Baby Bean",
 	dashboard: "Dashboard",
 	logs: "Logs",
-	devLogs: "Dev Logs",
 	template: "Template",
+	devLogs: "Dev Logs",
 }
 
 const goalTypes = ["Words", "Scenes", "Chapters", "Pages", "Lines"]

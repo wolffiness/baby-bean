@@ -15,8 +15,9 @@ function addSessionToLogs() {
 			source,
 		)
 
-		// Get form data from the Dashboard sheet
+		// Get form data from the user's sheet
 		const name = userSheet.getRange(logSessionRange.name).getValue()
+		const metric = userSheet.getRange(logSessionRange.metric).getValue()
 		const date = userSheet.getRange(logSessionRange.date).getValue()
 		const timeStart = userSheet.getRange(logSessionRange.timeStart).getValue()
 		const timeEnd = userSheet.getRange(logSessionRange.timeEnd).getValue()
@@ -26,6 +27,7 @@ function addSessionToLogs() {
 		// Validate the inputs
 		if (
 			!name ||
+			!metric ||
 			!date ||
 			!timeStart ||
 			!timeEnd ||
@@ -34,16 +36,16 @@ function addSessionToLogs() {
 		) {
 			logMessage(
 				logTypes.warning,
-				"Please fill in all the required fields: Name, Date, Start and End times, Start and End word count.",
+				"Please fill in all the required fields: Name, Date, Start and End times, Start and End count.",
 				source,
 			)
 			logMessage(
 				logTypes.debug,
-				`name: ${name}. date: ${date}. timeStart: ${timeStart}. timeEnd: ${timeEnd}. countStart: ${countStart}. countEnd: ${countEnd}`,
+				`name: ${name}. metric: ${metric}. date: ${date}. timeStart: ${timeStart}. timeEnd: ${timeEnd}. countStart: ${countStart}. countEnd: ${countEnd}`,
 				source,
 			)
 			SpreadsheetApp.getUi().alert(
-				"Please fill in all the required fields: Name, Date, Start and End times, Start and End word count.",
+				"Please fill in all the required fields: Name, Date, Start and End times, Start and End count.",
 			)
 			return
 		}
@@ -86,7 +88,7 @@ function addSessionToLogs() {
 			return
 		}
 
-		// Append the new prompt to the Logs sheet
+		// Append the new session to the Logs sheet
 		const newRow = [
 			name,
 			date,
@@ -97,6 +99,7 @@ function addSessionToLogs() {
 			"",
 			"",
 			"",
+			metric,
 		]
 		Logger.log(newRow)
 		logSheet.appendRow(newRow)
@@ -108,21 +111,20 @@ function addSessionToLogs() {
 			.getRange(lastRow, 9)
 			.setFormula(`=ROUND(G${lastRow}/(H${lastRow}*1440),0)`) // WPM
 
-		// Clear the input fields in the Dashboard and confirm success
+		// Clear the input fields in the user's sheet and confirm success
 		userSheet.getRange(logSessionRange.countStart).setValue(countEnd)
 		userSheet.getRange(logSessionRange.countEnd).clearContent()
 		userSheet.getRange(logSessionRange.timeStart).clearContent()
 		userSheet.getRange(logSessionRange.timeEnd).clearContent()
 
 		createTrigger(statCalculations.completion.trigger_function, 5)
-		createTrigger(statCalculations.tasks_completed.trigger_function, 5)
 
 		logMessage(logTypes.info, "Session has been saved.", source)
 		SpreadsheetApp.getUi().alert("Session has been saved.")
 	} catch (error) {
-		logMessage(logTypes.error, `An error has occured: ${error.stack}`, source)
+		logMessage(logTypes.error, `An error has occurred: ${error.stack}`, source)
 		SpreadsheetApp.getUi().alert(
-			`An error has occured, please contact the script creator for help: ${error.stack}`,
+			`An error has occurred, please contact the script creator for help: ${error.stack}`,
 		)
 	}
 }
