@@ -120,8 +120,6 @@ function addSessionToLogs() {
 		userSheet.getRange(logSessionRange.timeStart).clearContent()
 		userSheet.getRange(logSessionRange.timeEnd).clearContent()
 
-		createTrigger(statCalculations.completion.trigger_function, 5)
-
 		logMessage(logTypes.info, "Session has been saved.", source)
 		SpreadsheetApp.getUi().alert("Session has been saved.")
 	} catch (error) {
