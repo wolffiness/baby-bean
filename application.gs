@@ -42,6 +42,7 @@ function submitApplication() {
 		const nameRange = userSheet.getRange(templateRanges.name)
 		nameRange.setValue(name)
 		nameRange.protect().setWarningOnly(true)
+		templateRanges.metric.protect().setWarningOnly(true)
 
 		Object.keys(templateFormulas).forEach(key => {
 			userSheet.getRange(templateRanges[key]).setFormula(templateFormulas[key](templateRanges, goalAmount))
