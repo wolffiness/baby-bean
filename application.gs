@@ -23,7 +23,6 @@ function submitApplication() {
 			return
 		}
 
-		// Create a new sheet from the single generic template
 		if (response !== "edit") {
 			const totalSheets = spreadsheet.getNumSheets()
 			spreadsheet.insertSheet(userSheetName, totalSheets, {
@@ -33,26 +32,37 @@ function submitApplication() {
 
 		const userSheet = getSheet(userSheetName)
 
-		// Swap the [[METRIC]] placeholder for the goal type they picked
-		userSheet
-			.createTextFinder("[[METRIC]]")
-			.matchEntireCell(false)
-			.replaceAllWith(goalType)
+		if (response === "edit") {
+			// Sheet already exists: swap the old metric wording for the new one, everywhere it appears
+			const oldGoalType = userSheet.getRange(templateRanges.metric).getValue()
+			if (oldGoalType !== goalType) {
+				userSheet
+					.createTextFinder(oldGoalType)
+					.matchEntireCell(false)
+					.replaceAllWith(goalType)
+			}
+		} else {
+			// New sheet: swap the [[METRIC]] placeholder for the goal type they picked
+			userSheet
+				.createTextFinder("[[METRIC]]")
+				.matchEntireCell(false)
+				.replaceAllWith(goalType)
+		}
+
+		// Store the goal amount as a real value; the template's own formulas read
+		// E4 directly, so nothing else needs to be set here
+		userSheet.getRange(templateRanges.goalAmount).setValue(goalAmount)
 
 		const nameRange = userSheet.getRange(templateRanges.name)
 		nameRange.setValue(name)
-		nameRange.protect().setWarningOnly(true)
-		userSheet.getRange(templateRanges.metric).protect().setWarningOnly(true)
 
-		Object.keys(templateFormulas).forEach(key => {
-			userSheet.getRange(templateRanges[key]).setFormula(templateFormulas[key](templateRanges, goalAmount))
-		});
+		if (response !== "edit") {
+			nameRange.protect().setWarningOnly(true)
+			userSheet.getRange(templateRanges.metric).protect().setWarningOnly(true)
+		}
 
 		userSheet.setTabColor(null)
-
-		// remove application data
 		applicationSheet.getRange(applicationRange.full).clearContent()
-
 		createTrigger(statCalculations.participants.trigger_function, 5)
 
 		logMessage(
@@ -105,7 +115,7 @@ function validateForm(name, goalType, goalAmount) {
 	return true
 }
 
-function checkExistingApplication(userSheetName, goalType) {
+function checkExistingApplication(userSheetName) {
 	const source = "checkExistingApplication"
 
 	if (spreadsheet.getSheetByName(userSheetName) !== null) {
@@ -129,22 +139,6 @@ function checkExistingApplication(userSheetName, goalType) {
 			`Choice has been made to edit existing application.`,
 			source,
 		)
-
-		const oldGoalType = getSheet(userSheetName)
-			.getRange(templateRanges.metric)
-			.getValue()
-		logMessage(logTypes.debug, `oldGoalType: ${oldGoalType}`, source)
-
-		if (oldGoalType !== goalType) {
-			logMessage(
-				logTypes.warning,
-				`You have applied with a different goal type than your existing application. If you wish to change your goal type you will have to reapply instead.`,
-				source,
-			)
-			SpreadsheetApp.getUi().alert(
-				`You have applied with a different goal type than your existing application. If you wish to change your goal type you will have to reapply instead.`,
-			)
-		}
 
 		return "edit"
 	}

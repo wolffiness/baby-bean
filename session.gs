@@ -17,22 +17,24 @@ function addSessionToLogs() {
 
 		// Get form data from the user's sheet
 		const name = userSheet.getRange(logSessionRange.name).getValue()
-		const metric = userSheet.getRange(logSessionRange.metric).getValue()
 		const date = userSheet.getRange(logSessionRange.date).getValue()
 		const timeStart = userSheet.getRange(logSessionRange.timeStart).getValue()
 		const timeEnd = userSheet.getRange(logSessionRange.timeEnd).getValue()
 		const countStart = userSheet.getRange(logSessionRange.countStart).getValue()
 		const countEnd = userSheet.getRange(logSessionRange.countEnd).getValue()
+		const metric = userSheet.getRange(logSessionRange.metric).getValue()
+		const goalAmount = userSheet.getRange(logSessionRange.goalAmount).getValue()
 
 		// Validate the inputs
 		if (
 			!name ||
-			!metric ||
 			!date ||
 			!timeStart ||
 			!timeEnd ||
 			(!countStart && countStart !== 0) ||
-			!countEnd
+			!countEnd ||
+			!metric ||
+			!goalAmount
 		) {
 			logMessage(
 				logTypes.warning,
@@ -100,6 +102,7 @@ function addSessionToLogs() {
 			"",
 			"",
 			metric,
+			goalAmount,
 		]
 		Logger.log(newRow)
 		logSheet.appendRow(newRow)

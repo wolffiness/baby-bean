@@ -26,10 +26,7 @@ const statCalculations = {
 const templateRanges = {
 	name: "C3",
 	metric: "E3",
-	goal: "D20",
-	completion: "D21",
-	daily: "D22",
-	weekly: "D23",
+	goalAmount: "E4",
 }
 
 const templateFormulas = {
