@@ -10,19 +10,6 @@ const sheetNames = {
 
 const goalTypes = ["Words", "Scenes", "Chapters", "Pages", "Lines"]
 
-const statCalculations = {
-	participants: {
-		trigger_function: "participantsUpdateStat",
-		cell: "C3",
-		calculation: '=countStat("sheet")',
-	},
-	completion: {
-		trigger_function: "completionUpdateStat",
-		cell: "C4",
-		calculation: '=CONCAT(ROUND(averageStat("completion")), "%")',
-	},
-}
-
 const templateRanges = {
 	name: "C3",
 	metric: "E3",
@@ -78,8 +65,6 @@ function onOpen() {
 	ui
 		.createMenu("Dev tools")
 		.addItem("Clear logs", "initCleanLogs")
-		.addItem("Update stats", "updateAllStats")
-		.addItem("Set goal type dropdown", "setGoalTypeValidation")
 		.addToUi()
 }
 
@@ -112,33 +97,6 @@ function fetchSheetData(sheet, range = null) {
 	}
 
 	return data
-}
-
-function updateStat(key = "participants") {
-	const dashboardSheet = getSheet(sheetNames.dashboard)
-	dashboardSheet.getRange(statCalculations[key].cell).clearContent()
-	dashboardSheet
-		.getRange(statCalculations[key].cell)
-		.setFormula(statCalculations[key].calculation)
-
-	SpreadsheetApp.flush()
-	logMessage(logTypes.info, `Updated ${key} cell.`, "updateStat")
-}
-
-function updateAllStats() {
-	Object.keys(statCalculations).forEach((key) => {
-		updateStat(key)
-	})
-}
-
-function participantsUpdateStat() {
-	deleteExistingTriggers(statCalculations.participants.trigger_function)
-	updateStat("participants")
-}
-
-function completionUpdateStat() {
-	deleteExistingTriggers(statCalculations.completion.trigger_function)
-	updateStat("completion")
 }
 
 function createTrigger(name, duration) {

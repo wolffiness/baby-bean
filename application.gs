@@ -63,7 +63,6 @@ function submitApplication() {
 
 		userSheet.setTabColor(null)
 		applicationSheet.getRange(applicationRange.full).clearContent()
-		createTrigger(statCalculations.participants.trigger_function, 5)
 
 		logMessage(
 			logTypes.info,
