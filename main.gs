@@ -65,6 +65,7 @@ function onOpen() {
 	ui
 		.createMenu("Dev tools")
 		.addItem("Clear logs", "initCleanLogs")
+		.addItem("Create back up", "backupSheet")
 		.addToUi()
 }
 
