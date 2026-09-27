@@ -26,12 +26,6 @@ const statCalculations = {
 const templateRanges = {
 	name: "C3",
 	metric: "E3",
-	sessions: "D12",
-	written: "D13",
-	avgWritten: "D14",
-	mostWritten: "D15",
-	avgRate: "D16",
-	highestRate: "D17",
 	goal: "D20",
 	completion: "D21",
 	daily: "D22",
@@ -39,19 +33,8 @@ const templateRanges = {
 }
 
 const templateFormulas = {
-	sessions: (ranges) =>
-		`=COUNTIFS(Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
-	written: (ranges) =>
-		`=SUMIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
-	avgWritten: (ranges) => `=ROUND(${ranges.written}/${ranges.sessions}, 0)`,
-	mostWritten: (ranges) =>
-		`=MAXIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
-	avgRate: (ranges) =>
-		`=ROUND(AVERAGEIFS(Logs!J:J, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric}), 0)`,
-	highestRate: (ranges) =>
-		`=MAXIFS(Logs!J:J, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric})`,
 	goal: (ranges, goalAmount) =>
-		`=CONCAT(TEXT(SUMIFS(Logs!H:H, Logs!A:A, ${ranges.name}, Logs!B:B, ${ranges.metric}), "#,##0"), " / " & TEXT(${goalAmount}, "#,##0"))`,
+		`=CONCAT(TEXT(SUMIF(Logs!A:A, C3, Logs!G:G), "#,##0"), " / " & TEXT(${goalAmount}, "#,##0"))`,
 	completion: (ranges, goalAmount) =>
 		`=CONCAT(ROUND(((SUBSTITUTE(${ranges.goal}, " / " & TEXT(${goalAmount}, "#,##0"), "")) / ${goalAmount}) * 100, 0), "%")`,
 	daily: (ranges, goalAmount) =>
@@ -99,6 +82,7 @@ function onOpen() {
 		.createMenu("Dev tools")
 		.addItem("Clear logs", "initCleanLogs")
 		.addItem("Update stats", "updateAllStats")
+		.addItem("Set goal type dropdown", "setGoalTypeValidation")
 		.addToUi()
 }
 

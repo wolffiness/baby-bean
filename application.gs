@@ -43,37 +43,11 @@ function submitApplication() {
 		nameRange.setValue(name)
 		nameRange.protect().setWarningOnly(true)
 
-		userSheet
-			.getRange(templateRanges.sessions)
-			.setFormula(templateFormulas.sessions(templateRanges))
-		userSheet
-			.getRange(templateRanges.written)
-			.setFormula(templateFormulas.written(templateRanges))
-		userSheet
-			.getRange(templateRanges.avgWritten)
-			.setFormula(templateFormulas.avgWritten(templateRanges))
-		userSheet
-			.getRange(templateRanges.mostWritten)
-			.setFormula(templateFormulas.mostWritten(templateRanges))
-		userSheet
-			.getRange(templateRanges.avgRate)
-			.setFormula(templateFormulas.avgRate(templateRanges))
-		userSheet
-			.getRange(templateRanges.highestRate)
-			.setFormula(templateFormulas.highestRate(templateRanges))
+		Object.keys(templateFormulas).forEach(key => {
+			userSheet.getRange(templateRanges[key]).setFormula(templateFormulas[key](templateRanges, goalAmount))
+		});
 
-		userSheet
-			.getRange(templateRanges.goal)
-			.setFormula(templateFormulas.goal(templateRanges, goalAmount))
-		userSheet
-			.getRange(templateRanges.completion)
-			.setFormula(templateFormulas.completion(templateRanges, goalAmount))
-		userSheet
-			.getRange(templateRanges.daily)
-			.setFormula(templateFormulas.daily(templateRanges, goalAmount))
-		userSheet
-			.getRange(templateRanges.weekly)
-			.setFormula(templateFormulas.weekly(templateRanges, goalAmount))
+		userSheet.setTabColor(null)
 
 		// remove application data
 		applicationSheet.getRange(applicationRange.full).clearContent()
@@ -89,9 +63,9 @@ function submitApplication() {
 			`Finished ${response == "edit" ? "editing" : "creating"} sheet according to the application.`,
 		)
 	} catch (err) {
-		logMessage(logTypes.error, `An error has occured: ${err.stack}`, source)
+		logMessage(logTypes.error, `An error has occurred: ${err.stack}`, source)
 		SpreadsheetApp.getUi().alert(
-			`An error has occured, please contact the script creator for help: ${err.stack}`,
+			`An error has occurred, please contact the script creator for help: ${err.stack}`,
 		)
 	}
 }
