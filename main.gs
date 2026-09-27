@@ -120,3 +120,39 @@ function deleteExistingTriggers(triggerName) {
 		}
 	})
 }
+
+function backupSheet() {
+	const source = "backupSheet"
+
+	try {
+		const originalFile = DriveApp.getFileById(spreadsheet.getId())
+		const timestamp = Utilities.formatDate(
+			new Date(),
+			Session.getScriptTimeZone(),
+			"yyyy-MM-dd HH:mm",
+		)
+		const backupName = `${spreadsheet.getName()} - Backup ${timestamp}`
+
+		// Keep backups next to the original file rather than in Drive root
+		const parentFolders = originalFile.getParents()
+		const parentFolder = parentFolders.hasNext()
+			? parentFolders.next()
+			: DriveApp.getRootFolder()
+
+		const backupFolderName = "Backups"
+		const existingFolders = parentFolder.getFoldersByName(backupFolderName)
+		const backupFolder = existingFolders.hasNext()
+			? existingFolders.next()
+			: parentFolder.createFolder(backupFolderName)
+
+		const backupFile = originalFile.makeCopy(backupName, backupFolder)
+
+		logMessage(
+			logTypes.info,
+			`Backup created: "${backupFile.getName()}".`,
+			source,
+		)
+	} catch (err) {
+		logMessage(logTypes.error, `Error creating backup: ${err.stack}`, source)
+	}
+}
